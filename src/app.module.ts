@@ -6,6 +6,8 @@ import { UsersModule } from './users/users.module';
 import { ConfigModule } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { PostsModule } from './posts/posts.module';
+import { TagsModule } from './tags/tags.module';
 
 @Module({
   imports: [
@@ -29,6 +31,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
       isGlobal: true,
     }),
     ScheduleModule.forRoot(),
+    PostsModule,
+    TagsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
