@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Post } from "src/posts/entities/post.entity";
+import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
 export enum Gender {
   Male = 'male',
@@ -43,4 +44,13 @@ export class User {
 
   @Column({})
   gender: Gender
+
+  @OneToMany(type => Post, post => post.author)
+  posts: Post[]
+
+  @CreateDateColumn()
+  createdAt: Date
+
+  @UpdateDateColumn()
+  updatedAt: Date
 }
