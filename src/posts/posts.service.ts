@@ -2,7 +2,7 @@ import { Injectable, NotFoundException, Query } from '@nestjs/common';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Like, Repository } from 'typeorm';
 import { Post } from './entities/post.entity';
 import { Tag } from 'src/tags/entities/tag.entity';
 import { User } from 'src/users/entities/user.entity';
@@ -32,16 +32,46 @@ export class PostsService {
     return save;
   }
 
-  async findAll() {
-    const posts = await this.postsRepository.find({
-      where: {
-        published: true
-      },
-      relations: {
-        tags: true
+  async findAll(keyword: string, page: number = 1) {
+    const perPage = 5
+    const skip = perPage * (page - 1)
+
+    const where = keyword ? {
+      title: Like(`%${keyword}%`),
+      published: true
+    } : {
+      published: true
+    }
+
+    const postsCheck = await this.postsRepository.find({
+      where,
+      select: {
+        title: true
       }
     })
-    return posts;
+
+    const posts = await this.postsRepository.find({
+      where,
+      relations: {
+        tags: true
+      },
+      take: perPage,
+      skip,
+    })
+
+    const total = postsCheck.length
+    const lastPage = Math.ceil(total / perPage)
+    return {
+      data: {
+        posts
+      },
+      paginate: {
+        currentPage: +page,
+        perPage,
+        total,
+        lastPage
+      },
+    }
   }
 
   async findOne(id: number) {

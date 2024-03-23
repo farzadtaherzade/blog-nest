@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
@@ -26,8 +26,8 @@ export class PostsController {
   @Get()
   @ApiQuery({ name: "page", required: false, })
   @ApiQuery({ name: "keyword", required: false, })
-  findAll() {
-    return this.postsService.findAll();
+  findAll(@Query('keyword') keyword: string, @Query("page") page: number) {
+    return this.postsService.findAll(keyword, page);
   }
 
   @Get(':id')
