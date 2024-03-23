@@ -4,18 +4,21 @@ import { CreateUserDto } from 'src/users/dto/create-user.dto';
 import { User } from 'src/users/entities/user.entity';
 import { SigninDto } from './dto/signin.dto';
 import { Response } from 'express';
+import { ApiConsumes } from '@nestjs/swagger';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService) { }
 
   @Post('/signup')
+  @ApiConsumes("application/x-www-form-urlencoded", "application/json")
   @HttpCode(200)
   async signup(@Body() registerDto: CreateUserDto): Promise<User> {
     return await this.authService.signup(registerDto);
   }
 
   @Post('/signin')
+  @ApiConsumes("application/x-www-form-urlencoded", "application/json")
   @HttpCode(200)
   async signin(
     @Body() signinDto: SigninDto,
