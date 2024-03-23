@@ -45,7 +45,7 @@ export class User {
   @Column({})
   gender: Gender
 
-  @OneToMany(type => Post, post => post.author)
+  @OneToMany(type => Post, post => post.author, { nullable: true })
   posts: Post[]
 
   @CreateDateColumn()

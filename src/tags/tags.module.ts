@@ -3,9 +3,10 @@ import { TagsService } from './tags.service';
 import { TagsController } from './tags.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Tag } from './entities/tag.entity';
+import { Post } from 'src/posts/entities/post.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Tag])],
+  imports: [TypeOrmModule.forFeature([Tag, Post])],
   controllers: [TagsController],
   providers: [TagsService],
 })

@@ -6,7 +6,7 @@ import { JwtAuthGuard } from 'src/jwt-auth/jwt-auth.guard';
 import { PermissionsGuard } from 'src/jwt-auth/permissions.guard';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { Role } from 'src/users/entities/user.entity';
-import { ApiBearerAuth, ApiBody, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 
 @ApiBearerAuth()
 @ApiTags("tags")
@@ -17,6 +17,7 @@ export class TagsController {
   @Roles(Role.Author, Role.Admin)
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @ApiBody({ type: CreateTagDto })
+  @ApiConsumes("application/x-www-form-urlencoded", "application/json")
   @Post()
   create(@Body() createTagDto: CreateTagDto) {
     return this.tagsService.create(createTagDto);
@@ -30,11 +31,14 @@ export class TagsController {
 
   @Get(':name')
   @ApiParam({ name: "name" })
-  findOne(@Param('name') name: string) {
-    return this.tagsService.findOne(name);
+  @ApiQuery({ name: "page", required: false, })
+  findOne(@Param('name') name: string, @Query("page") page: number) {
+    return this.tagsService.findOne(name, page);
   }
 
   @Patch(':id')
+  @ApiConsumes("application/x-www-form-urlencoded", "application/json")
+  @ApiBody({ type: UpdateTagDto })
   update(@Param('id') id: string, @Body() updateTagDto: UpdateTagDto) {
     return this.tagsService.update(+id, updateTagDto);
   }

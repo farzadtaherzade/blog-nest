@@ -10,8 +10,7 @@ export class Tag {
     @Index({ fulltext: true })
     name: string
 
-    @ManyToMany(type => Post, post => post.tags, { nullable: true })
-    @JoinTable()
+    @ManyToMany(type => Post, post => post.tags)
     posts: Post[]
 
     @CreateDateColumn()
