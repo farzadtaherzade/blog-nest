@@ -10,7 +10,6 @@ export class CreatePostDto {
     title: string
 
     author: User
-
     slug: string
 
     @IsString()

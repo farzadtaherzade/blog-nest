@@ -1,6 +1,7 @@
+import { Comment } from "src/posts/entities/comment.entity";
 import { Tag } from "src/tags/entities/tag.entity";
 import { User } from "src/users/entities/user.entity";
-import { Column, CreateDateColumn, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
 @Entity()
 export class Post {
@@ -35,6 +36,9 @@ export class Post {
     @ManyToOne(type => User, user => user.posts)
     @JoinColumn({ name: 'author_id' })
     author: User
+
+    @OneToMany(type => Comment, comment => comment.post, { nullable: true })
+    comments: Comment[]
 
     @CreateDateColumn()
     createdAt: Date

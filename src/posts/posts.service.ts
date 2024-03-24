@@ -79,8 +79,13 @@ export class PostsService {
       where: {
         id,
         published: true
+      },
+      relations: {
+        author: true,
+        tags: true
       }
     })
+    if (!post) throw new NotFoundException("post not found")
     return post;
   }
 

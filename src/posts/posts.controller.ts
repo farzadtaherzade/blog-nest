@@ -8,11 +8,16 @@ import { PermissionsGuard } from 'src/jwt-auth/permissions.guard';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { Role, User } from 'src/users/entities/user.entity';
 import { GetUser } from 'src/auth/decorators/user.decorator';
+import { CommentsService } from './comments.service';
+import { CreateCommentDto } from './dto/create-comment.dto';
 
 @Controller('posts')
 @ApiTags("Posts")
 export class PostsController {
-  constructor(private readonly postsService: PostsService) { }
+  constructor(
+    private readonly postsService: PostsService,
+    private readonly commentsService: CommentsService
+  ) { }
 
   @Post()
   @UseGuards(JwtAuthGuard, PermissionsGuard)
@@ -49,5 +54,31 @@ export class PostsController {
   @ApiConsumes("application/x-www-form-urlencoded", "application/json")
   remove(@Param('id') id: string, @GetUser() user: User) {
     return this.postsService.remove(+id, user);
+  }
+
+  @Post(':id/comments')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @Roles(Role.Admin, Role.Author)
+  @ApiConsumes("application/x-www-form-urlencoded", "application/json")
+  createComments(@Body() createCommentDto: CreateCommentDto, @Param('id') id: string, @GetUser() user: User) {
+    createCommentDto.user = user
+    return this.commentsService.create(createCommentDto, +id)
+  }
+
+  @Get(':id/comments')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @Roles(Role.Admin, Role.Author)
+  @ApiConsumes("application/x-www-form-urlencoded", "application/json")
+  @ApiQuery({ name: "page", required: false, })
+  findAllComments(@Param('id') id: string, @Query("page") page: number, @GetUser() user: User) {
+    return this.commentsService.findAll(+id, page)
+  }
+
+  @Delete(':id/comments/:commentId')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @Roles(Role.Admin, Role.Author)
+  @ApiConsumes("application/x-www-form-urlencoded", "application/json")
+  removeComments(@Param('id') id: string, @Param('commentId') commentId: string, @GetUser() user: User) {
+    return this.commentsService.remove(+commentId, user)
   }
 }
