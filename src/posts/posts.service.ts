@@ -46,7 +46,6 @@ export class PostsService {
 
     if (post.cover) {
       const filePath = path.join('uploads', post.cover)
-      console.log(filePath)
       fs.unlink(filePath, (err) => {
         if (err) {
           console.error(err);

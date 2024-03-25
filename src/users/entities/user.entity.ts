@@ -26,7 +26,7 @@ export class User {
   email: string
 
   @Column({ nullable: true })
-  profile_image: string;
+  avatar: string;
 
   @Column()
   password: string

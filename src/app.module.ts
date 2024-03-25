@@ -8,12 +8,14 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PostsModule } from './posts/posts.module';
 import { TagsModule } from './tags/tags.module';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 
 @Module({
   imports: [
-    AuthModule,
-    UsersModule,
-
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', "static", 'uploads'),
+    }),
     TypeOrmModule.forRoot({
       type: 'mysql',
       host: 'localhost',
@@ -26,11 +28,12 @@ import { TagsModule } from './tags/tags.module';
       ],
       synchronize: true,
     }),
-
     ConfigModule.forRoot({
       isGlobal: true,
     }),
     ScheduleModule.forRoot(),
+    AuthModule,
+    UsersModule,
     PostsModule,
     TagsModule,
   ],

@@ -4,7 +4,7 @@ import { diskStorage } from "multer";
 import { generateRandomString } from "./generate";
 import { extname } from "path";
 
-export const destination = "./uploads"
+export const destination = "./static/uploads"
 
 export const multerOptions: MulterOptions = {
     storage: diskStorage({
