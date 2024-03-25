@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query, UseInterceptors, UploadedFile } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
@@ -10,6 +10,9 @@ import { Role, User } from 'src/users/entities/user.entity';
 import { GetUser } from 'src/auth/decorators/user.decorator';
 import { CommentsService } from './comments.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { FileUploadDto } from './dto/upload-post.dto';
+import { multerOptions } from 'src/helper/multer.config';
 
 @Controller('posts')
 @ApiTags("Posts")
@@ -26,6 +29,19 @@ export class PostsController {
   create(@Body() createPostDto: CreatePostDto, @GetUser() user: User) {
     createPostDto.author = user
     return this.postsService.create(createPostDto);
+  }
+
+  @Patch(':id/cover')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @Roles(Role.Admin, Role.Author)
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    description: 'List of cats',
+    type: FileUploadDto,
+  })
+  @UseInterceptors(FileInterceptor('cover', { dest: "./files", storage: multerOptions.storage }))
+  uploadFile(@UploadedFile() file: Express.Multer.File, @Param("id") id: string, @GetUser() user: User) {
+    return this.postsService.uploadFile(file, +id, user)
   }
 
   @Get()

@@ -1,3 +1,4 @@
+import { generateRandomString } from './../helper/generate';
 import { Injectable, NotFoundException, Query } from '@nestjs/common';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
@@ -7,6 +8,8 @@ import { Post } from './entities/post.entity';
 import { Tag } from 'src/tags/entities/tag.entity';
 import { User } from 'src/users/entities/user.entity';
 import slugify from 'slugify';
+import * as fs from 'fs';
+import * as path from 'path';
 
 @Injectable()
 export class PostsService {
@@ -17,7 +20,7 @@ export class PostsService {
     private tagsRepository: Repository<Tag>
   ) { }
   async create(createPostDto: CreatePostDto) {
-    const slug = this.generateRandomSlug(25)
+    const slug = generateRandomString(25)
     createPostDto.slug = slug;
     const story = this.postsRepository.create(createPostDto);
     if (typeof createPostDto.tagsId === 'string') createPostDto.tagsId = String(createPostDto.tagsId).split(",").map(id => parseInt(id));
@@ -30,6 +33,31 @@ export class PostsService {
     }));
     const save = await this.postsRepository.save(story)
     return save;
+  }
+
+  async uploadFile(file: Express.Multer.File, id: number, user: User) {
+    const post = await this.postsRepository.findOne({
+      where: {
+        id,
+        authorId: user.id
+      },
+    })
+    if (!post) throw new NotFoundException("post not found")
+
+    if (post.cover) {
+      const filePath = path.join('uploads', post.cover)
+      console.log(filePath)
+      fs.unlink(filePath, (err) => {
+        if (err) {
+          console.error(err);
+          return;
+        }
+        console.log('File deleted successfully');
+      })
+    }
+    post.cover = file.filename
+    await this.postsRepository.save(post)
+    return post
   }
 
   async findAll(keyword: string, page: number = 1) {
@@ -126,15 +154,5 @@ export class PostsService {
     }
     const result = await this.postsRepository.remove(post, {})
     return post;
-  }
-
-  generateRandomSlug(length: number): string {
-    const characters = 'abcdefghijklmnopqrstuvwxyz0123456789';
-    let slug = '';
-    for (let i = 0; i < length; i++) {
-      const randomIndex = Math.floor(Math.random() * characters.length);
-      slug += characters[randomIndex];
-    }
-    return slug;
   }
 }
