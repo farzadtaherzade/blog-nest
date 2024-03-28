@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateTagDto } from './dto/create-tag.dto';
 import { UpdateTagDto } from './dto/update-tag.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -12,82 +16,83 @@ export class TagsService {
     @InjectRepository(Tag)
     private tagsRepository: Repository<Tag>,
     @InjectRepository(Post)
-    private postRepository: Repository<Post>
-  ) { }
+    private postRepository: Repository<Post>,
+  ) {}
   async create(createTagDto: CreateTagDto) {
     const tag = await this.tagsRepository.findOne({
       where: {
-        name: createTagDto.name
-      }
-    })
-    if (tag) throw new BadRequestException("tag Already Exist")
-    const newTag = this.tagsRepository.create(createTagDto)
-    return await this.tagsRepository.save(newTag)
-
+        name: createTagDto.name,
+      },
+    });
+    if (tag) throw new BadRequestException('tag Already Exist');
+    const newTag = this.tagsRepository.create(createTagDto);
+    return await this.tagsRepository.save(newTag);
   }
 
   async findAll(search: string) {
-    const where = search ? {
-      name: Like(`%${search}%`)
-    } : {}
-    const tags = await this.tagsRepository.findAndCount({
+    const where = search
+      ? {
+          name: Like(`%${search}%`),
+        }
+      : {};
+    const tags = await this.tagsRepository.find({
       where,
       select: {
         name: true,
-        id: true
-      }
-    })
-    return tags;
+        id: true,
+      },
+    });
+    return {
+      data: {
+        tags,
+        total: tags.length,
+      },
+    };
   }
 
   async findOne(name: string, page: number = 1) {
-    const perPage = 5
-    const skip = perPage * (page - 1)
+    const perPage = 5;
+    const skip = perPage * (page - 1);
 
     const tag = await this.tagsRepository.findOne({
       where: {
-        name
+        name,
       },
       select: {
         name: true,
       },
-
-    })
-    if (!tag) throw new NotFoundException("Tag Not Found")
-    const postsCheck = await this.postRepository.find({
+    });
+    if (!tag) throw new NotFoundException('Tag Not Found');
+    const total = await this.postRepository.count({
       where: {
-        tags: tag
+        tags: tag,
       },
-      select: {
-        title: true
-      }
-    })
+    });
 
     const posts = await this.postRepository.find({
       where: {
-        tags: tag
+        tags: tag,
       },
       take: perPage,
       skip,
-    })
+    });
 
-    const total = postsCheck.length
-    const lastPage = Math.ceil(total / perPage)
+    const lastPage = Math.ceil(total / perPage);
     return {
       data: {
-        posts
+        posts,
       },
       paginate: {
         currentPage: page,
         perPage,
         total,
-        lastPage
+        lastPage,
       },
       meta: {
         tag,
-        totalAuthor: this.countUniqueAuthorsInPost(posts)
-      }
-    }
+        totalAuthor: this.countUniqueAuthorsInPost(posts),
+      },
+    };
   }
 
   async update(id: number, updateTagDto: UpdateTagDto) {
@@ -99,7 +104,9 @@ export class TagsService {
   }
 
   countUniqueAuthorsInPost(post: Post[]): number {
-    const uniqueAuthors = new Set(post.map(author => author.id === author.id));
+    const uniqueAuthors = new Set(
+      post.map((author) => author.id === author.id),
+    );
     return uniqueAuthors.size;
   }
 }
