@@ -10,9 +10,8 @@ export class CreateCommentDto {
   @ApiProperty()
   message: string;
 
-  @IsNumber()
   @IsOptional()
-  @ApiProperty()
+  @ApiProperty({ required: false, type: Number })
   parentId: number;
 
   parent: Comment;

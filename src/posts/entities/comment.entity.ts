@@ -6,6 +6,7 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -27,17 +28,32 @@ export class Comment {
   @Column({ name: 'user_id' })
   user_id: number;
 
-  @Column({ name: 'user_id' })
-  user_id: number;
+  @Column({ name: 'parent_id', nullable: true })
+  parent_id: number;
 
   @Column({ name: 'post_id' })
   postId: number;
 
-  @ManyToOne((type) => User, (user) => user.comments)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  @ManyToOne((_type) => User, (user) => user.comments)
   @JoinColumn({ name: 'user_id' })
   user: User;
 
-  @ManyToOne((type) => Post, (post) => post.comments, { nullable: false })
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  @ManyToOne((_type) => Comment, (comment) => comment.parent, {
+    nullable: true,
+  })
+  @JoinColumn({ name: 'parent_id' })
+  parent: Comment;
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  @OneToMany((_type) => Comment, (comment) => comment.replies, {
+    nullable: true,
+  })
+  replies: Comment[];
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  @ManyToOne((_type) => Post, (post) => post.comments, { nullable: false })
   @JoinColumn({ name: 'post_id' })
   post: Post;
 }

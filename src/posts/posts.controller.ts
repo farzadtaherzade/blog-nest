@@ -115,12 +115,19 @@ export class PostsController {
   @Roles(Role.Admin, Role.Author)
   @ApiConsumes('application/x-www-form-urlencoded', 'application/json')
   @ApiQuery({ name: 'page', required: false })
-  findAllComments(
-    @Param('id') id: string,
-    @Query('page') page: number,
-    @GetUser() user: User,
-  ) {
+  findAllComments(@Param('id') id: string, @Query('page') page: number) {
     return this.commentsService.findAll(+id, page);
+  }
+
+  @Get(':id/comments/:commentId')
+  @ApiConsumes('application/x-www-form-urlencoded', 'application/json')
+  @ApiQuery({ name: 'page', required: false })
+  findOneComment(
+    @Param('id') id: string,
+    @Param('commentId') commentId: string,
+    @Query('page') page: number,
+  ) {
+    return this.commentsService.findOne(+id, +commentId, page);
   }
 
   @Delete(':id/comments/:commentId')

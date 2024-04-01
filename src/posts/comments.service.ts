@@ -19,7 +19,7 @@ export class CommentsService {
     if (createCommentDto.parentId) {
       const oldComment = await this.commentsRepository.findOne({
         where: {
-          id: createCommentDto.parentId,
+          id: +createCommentDto.parentId,
         },
       });
       if (!oldComment)
@@ -28,6 +28,7 @@ export class CommentsService {
         );
       createCommentDto.parent = oldComment;
     }
+    createCommentDto.parentId = null;
     const post = await this.postsRepository.findOne({
       where: {
         id,
@@ -88,5 +89,51 @@ export class CommentsService {
     });
     await this.commentsRepository.remove(comment);
     return 'comment deleted successfully';
+  }
+
+  async findOne(postId: number, commentId: number, page: number = 1) {
+    page = page <= 0 ? 1 : page;
+    const perPage = 10;
+    const skip = perPage * (page - 1);
+    const comment = await this.commentsRepository.findOne({
+      where: {
+        id: commentId,
+        postId,
+      },
+    });
+    if (!comment) throw new NotFoundException('comment not found');
+    const post = await this.postsRepository.findOne({
+      where: {
+        id: postId,
+      },
+    });
+
+    // comments
+    const comments = await this.commentsRepository.find({
+      where: {
+        parent_id: comment.id,
+      },
+      skip,
+      take: perPage,
+    });
+    const total = await this.commentsRepository.count({
+      where: {
+        parent_id: comment.id,
+      },
+    });
+    const lastPage = Math.ceil(total / perPage);
+    return {
+      data: {
+        parent_comment: comment,
+        post,
+        comments,
+      },
+      paginate: {
+        currentPage: +page,
+        perPage,
+        total,
+        lastPage,
+      },
+    };
   }
 }
