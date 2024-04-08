@@ -8,6 +8,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  const port = process.env.PORT || 4000;
 
   const config = new DocumentBuilder()
     .setTitle('Nest Blog')
@@ -30,6 +31,8 @@ async function bootstrap() {
   app.use(passport.initialize());
   app.use(passport.session());
   app.use(cookieParser());
-  await app.listen(4000);
+  await app.listen(port, () => {
+    console.log(`swagger: http://localhost:${port}/docs`);
+  });
 }
 bootstrap();

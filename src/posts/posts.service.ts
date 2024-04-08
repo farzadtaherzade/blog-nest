@@ -4,9 +4,9 @@ import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Like, Repository } from 'typeorm';
-import { Post } from './entities/post.entity';
+import { Post, StatusStory } from './entities/post.entity';
 import { Tag } from 'src/tags/entities/tag.entity';
-import { User } from 'src/users/entities/user.entity';
+import { Role, User } from 'src/users/entities/user.entity';
 import slugify from 'slugify';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -19,23 +19,26 @@ export class PostsService {
     @InjectRepository(Tag)
     private tagsRepository: Repository<Tag>,
   ) {}
-  async create(createPostDto: CreatePostDto) {
+  async create(StoryDto: CreatePostDto, user: User) {
     const slug = generateRandomString(25);
-    createPostDto.slug = slug;
-    const story = this.postsRepository.create(createPostDto);
-    if (typeof createPostDto.tagsId === 'string')
-      createPostDto.tagsId = String(createPostDto.tagsId)
-        .split(',')
-        .map((id) => parseInt(id));
-    story.tags = await Promise.all(
-      createPostDto.tagsId.map(async (id) => {
-        return await this.tagsRepository.findOne({
-          where: {
-            id,
-          },
-        });
-      }),
-    );
+
+    // create story and modified
+    const story = this.postsRepository.create(StoryDto);
+    story.slug = slug;
+    story.authorId = user.id;
+    if (user.permissions.includes(Role.Admin)) story.special = true;
+
+    if (typeof StoryDto.tagsId === 'string')
+      StoryDto.tagsId = Array.from(
+        new Set(StoryDto.tagsId.split(',').map(Number)),
+      );
+    story.tags = (
+      await Promise.all(
+        StoryDto.tagsId.map(async (id: number) => {
+          return await this.tagsRepository.findOne({ where: { id } });
+        }),
+      )
+    ).filter((tag) => tag !== null);
     const save = await this.postsRepository.save(story);
     return save;
   }
@@ -71,10 +74,10 @@ export class PostsService {
     const where = keyword
       ? {
           title: Like(`%${keyword}%`),
-          published: true,
+          status: StatusStory.Published,
         }
       : {
-          published: true,
+          status: StatusStory.Published,
         };
 
     const totalPosts = await this.postsRepository.count({
@@ -109,7 +112,7 @@ export class PostsService {
     const post = await this.postsRepository.findOne({
       where: {
         id,
-        published: true,
+        status: StatusStory.Published,
       },
       relations: {
         author: true,
@@ -120,33 +123,33 @@ export class PostsService {
     return post;
   }
 
-  async update(id: number, updatePostDto: UpdatePostDto, user: User) {
+  async update(id: number, storyDto: UpdatePostDto, user: User) {
     const post = await this.postsRepository.findOne({
       where: {
         id,
         authorId: user.id,
       },
     });
-    updatePostDto.slug = slugify(updatePostDto.slug + ' ' + post.slug);
-    if (typeof updatePostDto.tagsId === 'string')
-      updatePostDto.tagsId = String(updatePostDto.tagsId)
-        .split(',')
-        .map((id) => parseInt(id));
+    storyDto.slug = slugify(storyDto.slug + ' ' + post.slug);
+
+    if (typeof storyDto.tagsId === 'string')
+      storyDto.tagsId = Array.from(
+        new Set(storyDto.tagsId.split(',').map(Number)),
+      );
 
     if (!post) {
       throw new NotFoundException(`Post with ID ${id} not found`);
     }
-    const updatedPost = { ...post, ...updatePostDto };
-    updatedPost.tags = await Promise.all(
-      updatePostDto.tagsId.map(async (id) => {
-        return await this.tagsRepository.findOne({
-          where: {
-            id,
-          },
-        });
-      }),
-    );
-    const result = await this.postsRepository.save(updatedPost);
+    const updatedStory = { ...post, ...storyDto };
+
+    updatedStory.tags = (
+      await Promise.all(
+        storyDto.tagsId.map(async (id: number) => {
+          return await this.tagsRepository.findOne({ where: { id } });
+        }),
+      )
+    ).filter((tag) => tag !== null);
+    const result = await this.postsRepository.save(updatedStory);
     return result;
   }
 

@@ -14,6 +14,11 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
+export enum StatusStory {
+  Draft = 'draft',
+  Published = 'published',
+}
+
 @Entity()
 export class Post {
   @PrimaryGeneratedColumn()
@@ -25,24 +30,36 @@ export class Post {
   @Column({ unique: true })
   slug: string;
 
-  @ManyToMany((type) => Tag, (tag) => tag.posts)
-  @JoinTable()
-  tags: Tag[];
-
   @Column()
   description: string;
 
   @Column()
   short_description: string;
 
+  @Column({ nullable: true, default: false })
+  special: boolean;
+
   @Column({ nullable: true })
   cover: string;
 
-  @Column({ default: false, nullable: true })
-  published: boolean;
+  @Column({ nullable: true, default: '' })
+  time_to_read: string;
+
+  @Column({ default: StatusStory.Draft, nullable: true })
+  status: StatusStory;
 
   @Column({ name: 'author_id' })
   authorId: number;
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
+
+  @ManyToMany((type) => Tag, (tag) => tag.posts)
+  @JoinTable()
+  tags: Tag[];
 
   @ManyToOne((type) => User, (user) => user.posts)
   @JoinColumn({ name: 'author_id' })
@@ -50,10 +67,4 @@ export class Post {
 
   @OneToMany((type) => Comment, (comment) => comment.post, { nullable: true })
   comments: Comment[];
-
-  @CreateDateColumn()
-  createdAt: Date;
-
-  @UpdateDateColumn()
-  updatedAt: Date;
 }

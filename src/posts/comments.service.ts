@@ -2,7 +2,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Repository } from 'typeorm';
-import { Post } from './entities/post.entity';
+import { Post, StatusStory } from './entities/post.entity';
 import { Comment } from './entities/comment.entity';
 import { User } from 'src/users/entities/user.entity';
 
@@ -48,7 +48,7 @@ export class CommentsService {
       where: {
         postId: id,
         post: {
-          published: true,
+          status: StatusStory.Published,
         },
       },
     });
@@ -56,7 +56,7 @@ export class CommentsService {
       where: {
         postId: id,
         post: {
-          published: true,
+          status: StatusStory.Published,
         },
       },
       relations: {

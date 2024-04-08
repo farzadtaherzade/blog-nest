@@ -25,6 +25,8 @@ import { CreateCommentDto } from './dto/create-comment.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { FileUploadDto } from './dto/upload-post.dto';
 import { multerOptions } from 'src/helper/multer.config';
+import { FilterStory } from 'src/decorators/filter.decorator';
+import { Pagination } from 'src/decorators/pagination.decorator';
 
 @Controller('posts')
 @ApiTags('Posts')
@@ -39,8 +41,7 @@ export class PostsController {
   @Roles(Role.Admin, Role.Author)
   @ApiConsumes('application/x-www-form-urlencoded', 'application/json')
   create(@Body() createPostDto: CreatePostDto, @GetUser() user: User) {
-    createPostDto.author = user;
-    return this.postsService.create(createPostDto);
+    return this.postsService.create(createPostDto, user);
   }
 
   @Patch(':id/cover')
@@ -66,8 +67,8 @@ export class PostsController {
   }
 
   @Get()
-  @ApiQuery({ name: 'page', required: false })
-  @ApiQuery({ name: 'keyword', required: false })
+  @Pagination()
+  @FilterStory()
   findAll(@Query('keyword') keyword: string, @Query('page') page: number) {
     return this.postsService.findAll(keyword, page);
   }
@@ -92,7 +93,6 @@ export class PostsController {
   @Delete(':id')
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @Roles(Role.Admin, Role.Author)
-  @ApiConsumes('application/x-www-form-urlencoded', 'application/json')
   remove(@Param('id') id: string, @GetUser() user: User) {
     return this.postsService.remove(+id, user);
   }
@@ -100,7 +100,6 @@ export class PostsController {
   @Post(':id/comments')
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @Roles(Role.Admin, Role.Author)
-  @ApiConsumes('application/x-www-form-urlencoded', 'application/json')
   createComments(
     @Body() createCommentDto: CreateCommentDto,
     @Param('id') id: string,
@@ -113,14 +112,12 @@ export class PostsController {
   @Get(':id/comments')
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @Roles(Role.Admin, Role.Author)
-  @ApiConsumes('application/x-www-form-urlencoded', 'application/json')
   @ApiQuery({ name: 'page', required: false })
   findAllComments(@Param('id') id: string, @Query('page') page: number) {
     return this.commentsService.findAll(+id, page);
   }
 
   @Get(':id/comments/:commentId')
-  @ApiConsumes('application/x-www-form-urlencoded', 'application/json')
   @ApiQuery({ name: 'page', required: false })
   findOneComment(
     @Param('id') id: string,
@@ -133,7 +130,6 @@ export class PostsController {
   @Delete(':id/comments/:commentId')
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @Roles(Role.Admin, Role.Author)
-  @ApiConsumes('application/x-www-form-urlencoded', 'application/json')
   removeComments(
     @Param('id') id: string,
     @Param('commentId') commentId: string,

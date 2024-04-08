@@ -22,7 +22,7 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @Roles(Role.Author, Role.User, Role.Author)
+  @Roles(Role.Admin, Role.Author)
   @Get('me')
   getMe(@GetUser() user: User) {
     return user;

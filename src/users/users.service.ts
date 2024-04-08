@@ -11,10 +11,13 @@ export class UsersService {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
-  ) { }
+  ) {}
   async createUser(createUserDto: CreateUserDto) {
-    const user = this.usersRepository.create({ ...createUserDto, permissions: [Role.User] });
-    const newUser = await this.usersRepository.save(user)
+    const user = this.usersRepository.create({
+      ...createUserDto,
+      permissions: [Role.User],
+    });
+    const newUser = await this.usersRepository.save(user);
     return newUser;
   }
 
@@ -23,28 +26,31 @@ export class UsersService {
       where: {
         id: id,
       },
-    })
+    });
 
     if (user.avatar) {
-      const filePath = path.join('uploads', user.avatar)
+      const filePath = path.join('uploads', user.avatar);
       fs.unlink(filePath, (err) => {
         if (err) {
           console.error(err);
           return;
         }
         console.log('File deleted successfully');
-      })
+      });
     }
-    user.avatar = file.filename
-    await this.usersRepository.save(user)
-    return user
+    user.avatar = file.filename;
+    await this.usersRepository.save(user);
+    return user;
   }
 
   async findUserByEmail(email: string): Promise<User | null> {
     const user = await this.usersRepository.findOne({
       where: {
-        email
-      }
+        email,
+      },
+      select: {
+        password: true,
+      },
     });
     return user;
   }

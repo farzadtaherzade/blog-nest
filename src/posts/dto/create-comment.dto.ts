@@ -1,6 +1,6 @@
 import { Comment } from './../entities/comment.entity';
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { Post } from 'src/posts/entities/post.entity';
 import { User } from 'src/users/entities/user.entity';
 
