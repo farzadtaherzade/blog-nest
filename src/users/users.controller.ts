@@ -1,8 +1,10 @@
 import {
+  Body,
   Controller,
   Get,
   Param,
   Patch,
+  Put,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -13,25 +15,29 @@ import { GetUser } from 'src/decorators/user.decorator';
 import { Role, User } from './entities/user.entity';
 import { PermissionsGuard } from 'src/jwt-auth/permissions.guard';
 import { Roles } from 'src/decorators/roles.decorator';
-import { ApiBody, ApiConsumes } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { FileUploadDto } from 'src/posts/dto/upload-post.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { multerOptions } from 'src/helper/multer.config';
+import { UpdateProfileDto } from './dto/update-user.dto';
 
+@ApiBearerAuth()
 @Controller('users')
+@ApiTags('Users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @Roles(Role.Admin, Role.Author)
   @Get('me')
+  @UseGuards(JwtAuthGuard)
+  // @Roles(Role.Admin, Role.Author)
+  @ApiBearerAuth()
   getMe(@GetUser() user: User) {
-    return user;
+    return this.usersService.getMe(user);
   }
 
   @Get(':username')
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @Roles(Role.Admin, Role.Author)
+  @UseGuards(JwtAuthGuard)
+  // @Roles(Role.Admin, Role.Author)
   getUser(@GetUser() user: User, @Param('username') username: string) {
     return this.usersService.getUser(username, user);
   }
@@ -41,6 +47,13 @@ export class UsersController {
   @Roles(Role.Admin, Role.Author)
   followToggle(@GetUser() user: User, @Param('username') username: string) {
     return this.usersService.followToggle(username, user);
+  }
+
+  @Put('/profile')
+  @UseGuards(JwtAuthGuard)
+  @ApiConsumes('application/x-www-form-urlencoded', 'application/json')
+  updateProfile(@GetUser() user: User, @Body() updateDto: UpdateProfileDto) {
+    return this.usersService.updateProfile(updateDto, user);
   }
 
   @Patch('/avatar')
@@ -57,7 +70,10 @@ export class UsersController {
       storage: multerOptions.storage,
     }),
   )
-  uploadFile(@UploadedFile() file: Express.Multer.File, @GetUser() user: User) {
-    return this.usersService.uploadAvatar(file, user.id);
+  uploadAvatar(
+    @UploadedFile() file: Express.Multer.File,
+    @GetUser() user: User,
+  ) {
+    return this.usersService.uploadAvatar(file, user.profile.id);
   }
 }

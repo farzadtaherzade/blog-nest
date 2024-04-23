@@ -100,6 +100,7 @@ export class PostsController {
   @Post(':id/comments')
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @Roles(Role.Admin, Role.Author)
+  @ApiConsumes('application/x-www-form-urlencoded', 'application/json')
   createComments(
     @Body() createCommentDto: CreateCommentDto,
     @Param('id') id: string,

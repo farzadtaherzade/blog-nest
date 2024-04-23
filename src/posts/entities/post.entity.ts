@@ -61,10 +61,13 @@ export class Post {
   @JoinTable()
   tags: Tag[];
 
-  @ManyToOne((type) => User, (user) => user.posts)
+  @ManyToOne((type) => User, (user) => user.posts, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'author_id' })
   author: User;
 
-  @OneToMany((type) => Comment, (comment) => comment.post, { nullable: true })
+  @OneToMany((type) => Comment, (comment) => comment.post, {
+    nullable: true,
+    onDelete: 'CASCADE',
+  })
   comments: Comment[];
 }

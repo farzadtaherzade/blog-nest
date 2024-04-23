@@ -8,10 +8,11 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from 'src/users/entities/user.entity';
 import { Follow } from 'src/users/entities/follow.entity';
+import { Profile } from 'src/users/entities/profile.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, Follow]),
+    TypeOrmModule.forFeature([User, Profile, Follow]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({

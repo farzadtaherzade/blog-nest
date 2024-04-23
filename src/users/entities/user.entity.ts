@@ -5,16 +5,12 @@ import {
   CreateDateColumn,
   Entity,
   OneToMany,
+  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { Follow } from './follow.entity';
-
-export enum Gender {
-  Male = 'male',
-  Female = 'female',
-  Other = 'other',
-}
+import { Profile } from './profile.entity';
 
 export enum Role {
   Admin = 'admin',
@@ -33,37 +29,35 @@ export class User {
   @Column({ length: 60, unique: true, nullable: false })
   email: string;
 
-  @Column({ nullable: true })
-  avatar: string;
-
   @Column({ nullable: false, select: false })
   password: string;
-
-  @Column({ nullable: false })
-  firstname: string;
-
-  @Column({ nullable: false })
-  lastname: string;
-
-  @Column({ nullable: true })
-  bio: string;
 
   @Column('simple-array', { nullable: true })
   permissions: Role[];
 
-  @Column({ nullable: false })
-  gender: Gender;
+  @OneToOne((type) => Profile, (profile) => profile.user, {
+    onDelete: 'CASCADE',
+  })
+  profile: Profile;
 
-  @OneToMany((type) => Post, (post) => post.author, { nullable: true })
+  @OneToMany((type) => Post, (post) => post.author, {
+    nullable: true,
+    onDelete: 'CASCADE',
+  })
   posts: Post[];
 
-  @OneToMany((type) => Comment, (comment) => comment.user, { nullable: true })
+  @OneToMany((type) => Comment, (comment) => comment.user, {
+    nullable: true,
+    onDelete: 'CASCADE',
+  })
   comments: Comment[];
 
-  @OneToMany((type) => Follow, (follow) => follow.target)
+  @OneToMany((type) => Follow, (follow) => follow.target, {
+    onDelete: 'CASCADE',
+  })
   followers: Follow[];
 
-  @OneToMany((type) => Follow, (follow) => follow.user)
+  @OneToMany((type) => Follow, (follow) => follow.user, { onDelete: 'CASCADE' })
   following: Follow[];
 
   @CreateDateColumn()
