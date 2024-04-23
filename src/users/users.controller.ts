@@ -1,6 +1,7 @@
 import {
   Controller,
   Get,
+  Param,
   Patch,
   UploadedFile,
   UseGuards,
@@ -26,6 +27,20 @@ export class UsersController {
   @Get('me')
   getMe(@GetUser() user: User) {
     return user;
+  }
+
+  @Get(':username')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @Roles(Role.Admin, Role.Author)
+  getUser(@GetUser() user: User, @Param('username') username: string) {
+    return this.usersService.getUser(username, user);
+  }
+
+  @Patch(':username')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @Roles(Role.Admin, Role.Author)
+  followToggle(@GetUser() user: User, @Param('username') username: string) {
+    return this.usersService.followToggle(username, user);
   }
 
   @Patch('/avatar')

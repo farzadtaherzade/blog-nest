@@ -5,6 +5,7 @@ import { Repository } from 'typeorm';
 import { Post, StatusStory } from './entities/post.entity';
 import { Comment } from './entities/comment.entity';
 import { User } from 'src/users/entities/user.entity';
+import { paginationGen } from 'src/utils/pagination-gen';
 
 @Injectable()
 export class CommentsService {
@@ -24,7 +25,7 @@ export class CommentsService {
       });
       if (!oldComment)
         throw new NotFoundException(
-          'comment your want to reply not found check that comment is exist!',
+          'comment your want to reply not found check comment is exist!',
         );
       createCommentDto.parent = oldComment;
     }
@@ -42,41 +43,42 @@ export class CommentsService {
   }
 
   async findAll(id: number, page: number = 1) {
-    const perPage = 5;
-    const skip = perPage * (page - 1);
-    const total = await this.commentsRepository.count({
-      where: {
-        postId: id,
-        post: {
-          status: StatusStory.Published,
-        },
+    const limit = 5;
+    const offset = limit * (page - 1);
+    const where = {
+      postId: id,
+      post: {
+        status: StatusStory.Published,
       },
-    });
-    const comments = await this.commentsRepository.find({
-      where: {
-        postId: id,
-        post: {
-          status: StatusStory.Published,
-        },
-      },
+    };
+
+    // SELECT C.*, COUNT(`CC`.`id`) AS `child` FROM `comment` `C` LEFT JOIN `comment` `CC` ON `CC`.`parent_id`=`C`.`id` WHERE `C`.`post_id` = 10 GROUP BY `C`.`id` LIMIT 5
+    const [comments, count] = await this.commentsRepository.findAndCount({
+      where,
       relations: {
         user: true,
       },
-      take: perPage,
-      skip,
+
+      skip: offset,
+      take: limit,
     });
 
-    const lastPage = Math.ceil(total / perPage);
+    for (let i = 0; i < comments.length; i++) {
+      comments[i].replies = await this.commentsRepository.count({
+        where: {
+          parent_id: comments[i].id,
+          post: {
+            status: StatusStory.Published,
+          },
+        },
+      });
+    }
+
     return {
       data: {
         comments,
       },
-      paginate: {
-        currentPage: +page,
-        perPage,
-        total,
-        lastPage,
-      },
+      paginate: paginationGen(count, limit, +page),
     };
   }
 
@@ -93,47 +95,51 @@ export class CommentsService {
 
   async findOne(postId: number, commentId: number, page: number = 1) {
     page = page <= 0 ? 1 : page;
-    const perPage = 10;
-    const skip = perPage * (page - 1);
+    const limit = 10;
+    const skip = limit * (page - 1);
     const comment = await this.commentsRepository.findOne({
       where: {
         id: commentId,
         postId,
       },
+      relations: {
+        post: true,
+      },
     });
+
     if (!comment) throw new NotFoundException('comment not found');
-    const post = await this.postsRepository.findOne({
+
+    comment.replies = await this.commentsRepository.count({
       where: {
-        id: postId,
+        parent_id: comment.id,
+        post: {
+          status: StatusStory.Published,
+        },
       },
     });
 
     // comments
-    const comments = await this.commentsRepository.find({
+    const [comments, count] = await this.commentsRepository.findAndCount({
       where: {
         parent_id: comment.id,
       },
       skip,
-      take: perPage,
+      take: limit,
     });
-    const total = await this.commentsRepository.count({
-      where: {
-        parent_id: comment.id,
-      },
-    });
-    const lastPage = Math.ceil(total / perPage);
+
     return {
       data: {
         parent_comment: comment,
-        post,
+        post: comment.post,
         comments,
       },
-      paginate: {
-        currentPage: +page,
-        perPage,
-        total,
-        lastPage,
-      },
+      paginate: paginationGen(count, limit, +page),
     };
+  }
+
+  async countCommentByPostId(post_id: number) {
+    return await this.commentsRepository.countBy({
+      postId: post_id,
+    });
   }
 }

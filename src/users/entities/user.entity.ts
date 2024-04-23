@@ -8,6 +8,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { Follow } from './follow.entity';
 
 export enum Gender {
   Male = 'male',
@@ -58,6 +59,12 @@ export class User {
 
   @OneToMany((type) => Comment, (comment) => comment.user, { nullable: true })
   comments: Comment[];
+
+  @OneToMany((type) => Follow, (follow) => follow.target)
+  followers: Follow[];
+
+  @OneToMany((type) => Follow, (follow) => follow.user)
+  following: Follow[];
 
   @CreateDateColumn()
   createdAt: Date;

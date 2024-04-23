@@ -7,10 +7,11 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from 'src/users/entities/user.entity';
+import { Follow } from 'src/users/entities/follow.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User]),
+    TypeOrmModule.forFeature([User, Follow]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
@@ -25,4 +26,4 @@ import { User } from 'src/users/entities/user.entity';
   controllers: [AuthController],
   providers: [AuthService, UsersService, JwtStrategy],
 })
-export class AuthModule { }
+export class AuthModule {}

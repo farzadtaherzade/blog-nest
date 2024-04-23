@@ -50,7 +50,7 @@ export class Comment {
   @OneToMany((_type) => Comment, (comment) => comment.replies, {
     nullable: true,
   })
-  replies: Comment[];
+  replies: Comment[] | number;
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   @ManyToOne((_type) => Post, (post) => post.comments, { nullable: false })
