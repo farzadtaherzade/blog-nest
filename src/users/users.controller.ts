@@ -5,6 +5,7 @@ import {
   Param,
   Patch,
   Put,
+  Query,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -20,6 +21,8 @@ import { FileUploadDto } from 'src/posts/dto/upload-post.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { multerOptions } from 'src/helper/multer.config';
 import { UpdateProfileDto } from './dto/update-user.dto';
+import { Pagination } from 'src/decorators/pagination.decorator';
+import { ChangeUsernameDto } from './dto/user.dto';
 
 @ApiBearerAuth()
 @Controller('users')
@@ -29,22 +32,50 @@ export class UsersController {
 
   @Get('me')
   @UseGuards(JwtAuthGuard)
-  // @Roles(Role.Admin, Role.Author)
-  @ApiBearerAuth()
   getMe(@GetUser() user: User) {
     return this.usersService.getMe(user);
   }
 
   @Get(':username')
   @UseGuards(JwtAuthGuard)
-  // @Roles(Role.Admin, Role.Author)
   getUser(@GetUser() user: User, @Param('username') username: string) {
     return this.usersService.getUser(username, user);
   }
 
-  @Patch(':username')
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @Roles(Role.Admin, Role.Author)
+  @Get(':username/stories')
+  @UseGuards(JwtAuthGuard)
+  @Pagination()
+  getUserPosts(
+    @GetUser() user: User,
+    @Param('username') username: string,
+    @Query('page') page: number,
+  ) {
+    return this.usersService.getUserStories(username, user, +page);
+  }
+
+  @Get('/:username/followrs')
+  @UseGuards(JwtAuthGuard)
+  @Pagination()
+  getFollowrs(
+    @Param('username') username: string,
+    @Query('page') page: number,
+  ) {
+    return this.usersService.getFollowrs(username, page);
+  }
+
+  @Get('/:username/following')
+  @UseGuards(JwtAuthGuard)
+  @Pagination()
+  getFollowing(
+    @Param('username') username: string,
+    @Query('page') page: number,
+  ) {
+    return this.usersService.getFollowing(username, page);
+  }
+
+  @Patch(':username/follow')
+  @UseGuards(JwtAuthGuard)
+  // @Roles(Role.Admin, Role.Author)
   followToggle(@GetUser() user: User, @Param('username') username: string) {
     return this.usersService.followToggle(username, user);
   }
@@ -54,6 +85,24 @@ export class UsersController {
   @ApiConsumes('application/x-www-form-urlencoded', 'application/json')
   updateProfile(@GetUser() user: User, @Body() updateDto: UpdateProfileDto) {
     return this.usersService.updateProfile(updateDto, user);
+  }
+
+  @Patch('/change-username')
+  @UseGuards(JwtAuthGuard)
+  @ApiConsumes('application/x-www-form-urlencoded', 'application/json')
+  changeUsername(
+    @GetUser() user: User,
+    @Body() changeUsername: ChangeUsernameDto,
+  ) {
+    return this.usersService.changeUsername(user, changeUsername);
+  }
+
+  @Get('/check-username')
+  @UseGuards(JwtAuthGuard)
+  @ApiConsumes('application/x-www-form-urlencoded', 'application/json')
+  checkUsername(@Body() changeUsername: ChangeUsernameDto) {
+    const check = this.usersService.checkUsername(changeUsername.username);
+    return check ? 'username exists' : 'username not exists';
   }
 
   @Patch('/avatar')

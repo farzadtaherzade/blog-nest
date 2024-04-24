@@ -21,3 +21,10 @@ export class CreateUserDto {
   @ApiProperty()
   username: string;
 }
+
+export class ChangeUsernameDto {
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty()
+  username: string;
+}

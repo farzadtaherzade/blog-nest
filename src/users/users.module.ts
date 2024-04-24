@@ -6,9 +6,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
 import { Follow } from './entities/follow.entity';
 import { Profile } from './entities/profile.entity';
+import { Post } from 'src/posts/entities/post.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User, Profile, Follow])],
+  imports: [TypeOrmModule.forFeature([User, Profile, Follow, Post])],
   controllers: [UsersController],
   providers: [UsersService, JwtStrategy],
   exports: [UsersService],

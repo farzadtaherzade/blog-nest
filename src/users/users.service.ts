@@ -1,5 +1,9 @@
-import { CreateUserDto } from './dto/create-user.dto';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ChangeUsernameDto, CreateUserDto } from './dto/user.dto';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { Role, User } from './entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -9,6 +13,8 @@ import { Follow } from './entities/follow.entity';
 import { Profile } from './entities/profile.entity';
 import { generateRandomString } from 'src/helper/generate';
 import { UpdateProfileDto } from './dto/update-user.dto';
+import { paginationGen } from 'src/utils/pagination-gen';
+import { Post, StatusStory } from 'src/posts/entities/post.entity';
 
 @Injectable()
 export class UsersService {
@@ -19,6 +25,8 @@ export class UsersService {
     private followRepository: Repository<Follow>,
     @InjectRepository(Profile)
     private profileRepository: Repository<Profile>,
+    @InjectRepository(Post)
+    private storyRepository: Repository<Post>,
   ) {}
   async createUser(createUserDto: CreateUserDto) {
     const user = await this.usersRepository.create({
@@ -96,6 +104,86 @@ export class UsersService {
         ...target,
         follow: isFollow,
       },
+    };
+  }
+
+  async getFollowrs(username: string, page: number) {
+    const limit = 15;
+    const skip = limit * (page - 1);
+    const user = await this.findUserByUsername(username);
+    const [followers, count] = await this.followRepository.findAndCount({
+      where: {
+        target_id: user.id,
+      },
+      take: limit,
+      skip: +skip,
+    });
+    return {
+      data: {
+        followers,
+      },
+      pagination: paginationGen(count, limit, +page),
+    };
+  }
+
+  async getUserStories(username: string, user: User, page: number) {
+    const limit = 15;
+    const skip = limit * (page - 1);
+    const author = await this.findUserByUsername(username);
+    const where =
+      user.id == author.id
+        ? { authorId: author.id }
+        : {
+            authorId: author.id,
+            status: StatusStory.Published,
+          };
+    const [stories, count] = await this.storyRepository.findAndCount({
+      where,
+      skip,
+      take: limit,
+    });
+
+    return {
+      data: {
+        stories,
+      },
+      pagination: paginationGen(count, limit, +page),
+    };
+  }
+
+  async checkUsername(username: string): Promise<boolean> {
+    return await this.usersRepository.existsBy({
+      username,
+    });
+  }
+
+  async changeUsername(user: User, usernameDto: ChangeUsernameDto) {
+    const { username } = usernameDto;
+    const checkUsername = await this.usersRepository.existsBy({
+      username,
+    });
+    if (checkUsername) throw new BadRequestException('username already use');
+    user.username = username;
+    await this.usersRepository.save(user);
+    return 'username changed';
+  }
+  async getFollowing(username: string, page: number) {
+    const limit = 15;
+    const skip = limit * (page - 1);
+    const user = await this.findUserByUsername(username);
+    console.log(page);
+    const [followers, count] = await this.followRepository.findAndCount({
+      where: {
+        user_id: user.id,
+      },
+      take: limit,
+      skip: +skip,
+    });
+    return {
+      data: {
+        followers,
+      },
+      pagination: paginationGen(count, limit, +page),
     };
   }
 

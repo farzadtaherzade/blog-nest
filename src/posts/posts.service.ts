@@ -68,8 +68,8 @@ export class PostsService {
   }
 
   async findAll(keyword: string, page: number = 1) {
-    const perPage = 5;
-    const skip = perPage * (page - 1);
+    const limit = 5;
+    const skip = limit * (page - 1);
 
     const where = keyword
       ? {
@@ -89,19 +89,19 @@ export class PostsService {
       relations: {
         tags: true,
       },
-      take: perPage,
+      take: limit,
       skip,
     });
 
     const total = totalPosts;
-    const lastPage = Math.ceil(total / perPage);
+    const lastPage = Math.ceil(total / limit);
     return {
       data: {
         posts,
       },
       paginate: {
         currentPage: +page,
-        perPage,
+        limit,
         total,
         lastPage,
       },
