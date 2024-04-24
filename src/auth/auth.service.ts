@@ -1,4 +1,4 @@
-import { CreateUserDto } from 'src/users/dto/create-user.dto';
+import { CreateUserDto } from 'src/users/dto/user.dto';
 import { UsersService } from 'src/users/users.service';
 import * as bcrypt from 'bcrypt';
 import { SigninDto } from './dto/signin.dto';
@@ -25,9 +25,11 @@ export class AuthService {
   }
   async signin(signinDto: SigninDto) {
     const user = await this.usersService.findUserByEmail(signinDto.email);
-    console.log(user);
+    if (!user)
+      throw new BadRequestException('email or password is wrong try again');
     const comparePass = bcrypt.compareSync(signinDto.password, user.password);
-    if (!comparePass) throw new UnauthorizedException();
+    if (!comparePass)
+      throw new UnauthorizedException('email or password is wrong try again');
     const payload = { sub: user.id, email: user.email };
     const accessToken = await this.jwtService.signAsync(payload);
     return accessToken;

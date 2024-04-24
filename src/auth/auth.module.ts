@@ -9,10 +9,11 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from 'src/users/entities/user.entity';
 import { Follow } from 'src/users/entities/follow.entity';
 import { Profile } from 'src/users/entities/profile.entity';
+import { Post } from 'src/posts/entities/post.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, Profile, Follow]),
+    TypeOrmModule.forFeature([User, Profile, Follow, Post]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
