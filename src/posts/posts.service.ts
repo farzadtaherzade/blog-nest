@@ -10,6 +10,8 @@ import { Role, User } from 'src/users/entities/user.entity';
 import slugify from 'slugify';
 import * as fs from 'fs';
 import * as path from 'path';
+import { paginationGen } from 'src/utils/pagination-gen';
+import { CommentsService } from './comments.service';
 
 @Injectable()
 export class PostsService {
@@ -18,6 +20,7 @@ export class PostsService {
     private postsRepository: Repository<Post>,
     @InjectRepository(Tag)
     private tagsRepository: Repository<Tag>,
+    private commentService: CommentsService,
   ) {}
   async create(StoryDto: CreatePostDto, user: User) {
     const slug = generateRandomString(25);
@@ -80,11 +83,7 @@ export class PostsService {
           status: StatusStory.Published,
         };
 
-    const totalPosts = await this.postsRepository.count({
-      where,
-    });
-
-    const posts = await this.postsRepository.find({
+    const [posts, count] = await this.postsRepository.findAndCount({
       where,
       relations: {
         tags: true,
@@ -93,18 +92,16 @@ export class PostsService {
       skip,
     });
 
-    const total = totalPosts;
-    const lastPage = Math.ceil(total / limit);
+    for (let i = 0; i < posts.length; i++) {
+      posts[i]['commentsCount'] =
+        await this.commentService.countCommentByPostId(posts[i].id);
+    }
+
     return {
       data: {
         posts,
       },
-      paginate: {
-        currentPage: +page,
-        limit,
-        total,
-        lastPage,
-      },
+      paginate: paginationGen(count, limit, +page),
     };
   }
 

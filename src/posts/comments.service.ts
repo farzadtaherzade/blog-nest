@@ -137,9 +137,10 @@ export class CommentsService {
     };
   }
 
-  async countCommentByPostId(post_id: number) {
-    return await this.commentsRepository.countBy({
+  async countCommentByPostId(post_id: number): Promise<number> {
+    const count: number = await this.commentsRepository.countBy({
       postId: post_id,
     });
+    return count;
   }
 }
