@@ -10,10 +10,12 @@ import { User } from 'src/users/entities/user.entity';
 import { Follow } from 'src/users/entities/follow.entity';
 import { Profile } from 'src/users/entities/profile.entity';
 import { Post } from 'src/posts/entities/post.entity';
+import { Comment } from 'src/posts/entities/comment.entity';
+import { CommentsService } from 'src/posts/comments.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, Profile, Follow, Post]),
+    TypeOrmModule.forFeature([User, Profile, Follow, Post, Comment]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
@@ -26,6 +28,6 @@ import { Post } from 'src/posts/entities/post.entity';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, UsersService, JwtStrategy],
+  providers: [AuthService, UsersService, JwtStrategy, CommentsService],
 })
 export class AuthModule {}

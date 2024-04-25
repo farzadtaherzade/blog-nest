@@ -7,11 +7,13 @@ import { User } from './entities/user.entity';
 import { Follow } from './entities/follow.entity';
 import { Profile } from './entities/profile.entity';
 import { Post } from 'src/posts/entities/post.entity';
+import { Comment } from 'src/posts/entities/comment.entity';
+import { CommentsService } from 'src/posts/comments.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User, Profile, Follow, Post])],
+  imports: [TypeOrmModule.forFeature([User, Profile, Follow, Post, Comment])],
   controllers: [UsersController],
-  providers: [UsersService, JwtStrategy],
+  providers: [UsersService, JwtStrategy, CommentsService],
   exports: [UsersService],
 })
 export class UsersModule {}

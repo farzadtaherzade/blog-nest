@@ -15,6 +15,7 @@ import { generateRandomString } from 'src/helper/generate';
 import { UpdateProfileDto } from './dto/update-user.dto';
 import { paginationGen } from 'src/utils/pagination-gen';
 import { Post, StatusStory } from 'src/posts/entities/post.entity';
+import { CommentsService } from 'src/posts/comments.service';
 
 @Injectable()
 export class UsersService {
@@ -27,6 +28,7 @@ export class UsersService {
     private profileRepository: Repository<Profile>,
     @InjectRepository(Post)
     private storyRepository: Repository<Post>,
+    private readonly commentService: CommentsService,
   ) {}
   async createUser(createUserDto: CreateUserDto) {
     const user = await this.usersRepository.create({
@@ -142,6 +144,11 @@ export class UsersService {
       skip,
       take: limit,
     });
+
+    for (let i = 0; i < stories.length; i++) {
+      stories[i]['commentsCount'] =
+        await this.commentService.countCommentByPostId(stories[i].id);
+    }
 
     return {
       data: {
