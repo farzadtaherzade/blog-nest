@@ -13,6 +13,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { LikeStory } from './story-like.entity';
 
 export enum StatusStory {
   Draft = 'draft',
@@ -70,4 +71,9 @@ export class Post {
     onDelete: 'CASCADE',
   })
   comments: Comment[];
+
+  @OneToMany((_type) => LikeStory, (like) => like.target, {
+    onDelete: 'CASCADE',
+  })
+  likes: LikeStory[];
 }

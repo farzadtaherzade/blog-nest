@@ -12,6 +12,7 @@ import {
 import { Follow } from './follow.entity';
 import { Profile } from './profile.entity';
 import { LikeComment } from 'src/posts/entities/comment-like.entity';
+import { LikeStory } from 'src/posts/entities/story-like.entity';
 
 export enum Role {
   Admin = 'admin',
@@ -35,6 +36,12 @@ export class User {
 
   @Column('simple-array', { nullable: true })
   permissions: Role[];
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 
   @OneToOne((type) => Profile, (profile) => profile.user, {
     onDelete: 'CASCADE',
@@ -64,11 +71,10 @@ export class User {
   @OneToMany((type) => LikeComment, (like) => like.user, {
     onDelete: 'CASCADE',
   })
-  commentLikes: LikeComment[];
+  comment_likes: LikeComment[];
 
-  @CreateDateColumn()
-  createdAt: Date;
-
-  @UpdateDateColumn()
-  updatedAt: Date;
+  @OneToMany((type) => LikeComment, (like) => like.user, {
+    onDelete: 'CASCADE',
+  })
+  story_likes: LikeStory[];
 }

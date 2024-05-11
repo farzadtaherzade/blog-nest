@@ -5,11 +5,11 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { Comment } from './comment.entity';
 import { User } from 'src/users/entities/user.entity';
+import { Post } from './post.entity';
 
 @Entity()
-export class LikeComment {
+export class LikeStory {
   @PrimaryGeneratedColumn()
   number: number;
 
@@ -19,11 +19,11 @@ export class LikeComment {
   @Column({ name: 'user_id' })
   user_id: number;
 
-  @ManyToOne((type) => Comment, (comment) => comment.likes)
+  @ManyToOne((_type) => Post, (post) => post.likes)
   @JoinColumn({ name: 'target_id' })
-  target: Comment;
+  target: Post;
 
-  @ManyToOne((type) => User, (user) => user.comment_likes)
+  @ManyToOne((_type) => User, (user) => user.story_likes)
   @JoinColumn({ name: 'user_id' })
   user: User;
 }
