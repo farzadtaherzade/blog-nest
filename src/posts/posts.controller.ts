@@ -14,7 +14,13 @@ import {
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
-import { ApiBody, ApiConsumes, ApiQuery, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/jwt-auth/jwt-auth.guard';
 import { PermissionsGuard } from 'src/jwt-auth/permissions.guard';
 import { Roles } from 'src/decorators/roles.decorator';
@@ -30,6 +36,7 @@ import { Pagination } from 'src/decorators/pagination.decorator';
 
 @Controller('posts')
 @ApiTags('Posts')
+@ApiBearerAuth()
 export class PostsController {
   constructor(
     private readonly postsService: PostsService,
@@ -114,18 +121,35 @@ export class PostsController {
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @Roles(Role.Admin, Role.Author)
   @ApiQuery({ name: 'page', required: false })
-  findAllComments(@Param('id') id: string, @Query('page') page: number) {
-    return this.commentsService.findAll(+id, page);
+  findAllComments(
+    @GetUser() user: User,
+    @Param('id') id: string,
+    @Query('page') page: number,
+  ) {
+    return this.commentsService.findAll(+id, page, user);
   }
 
   @Get(':id/comments/:commentId')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @Roles(Role.Admin, Role.Author)
   @ApiQuery({ name: 'page', required: false })
   findOneComment(
+    @GetUser() user: User,
     @Param('id') id: string,
     @Param('commentId') commentId: string,
     @Query('page') page: number,
   ) {
-    return this.commentsService.findOne(+id, +commentId, page);
+    return this.commentsService.findOne(+id, +commentId, page, user);
+  }
+
+  @Patch(':id/comments/:commentId/like')
+  @UseGuards(JwtAuthGuard)
+  toggleCommentLike(
+    @GetUser() user: User,
+    @Param('commentId') id: string,
+    @Param('id') post_id: string,
+  ) {
+    return this.commentsService.toggleLike(+id, user, +post_id);
   }
 
   @Delete(':id/comments/:commentId')

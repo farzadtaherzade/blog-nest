@@ -43,13 +43,14 @@ export class Comment {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   @ManyToOne((_type) => Comment, (comment) => comment.parent, {
     nullable: true,
+    onDelete: 'SET NULL',
   })
   @JoinColumn({ name: 'parent_id' })
   parent: Comment;
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   @OneToMany((_type) => Comment, (comment) => comment.replies, {
-    nullable: true,
+    onDelete: 'CASCADE',
   })
   replies: Comment[] | number;
 
@@ -58,8 +59,9 @@ export class Comment {
   @JoinColumn({ name: 'post_id' })
   post: Post;
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   @OneToMany((_type) => LikeComment, (like) => like.target, {
     onDelete: 'CASCADE',
   })
-  likes: LikeComment[];
+  likes: LikeComment[] | number;
 }

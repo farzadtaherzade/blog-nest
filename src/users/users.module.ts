@@ -9,9 +9,21 @@ import { Profile } from './entities/profile.entity';
 import { Post } from 'src/posts/entities/post.entity';
 import { Comment } from 'src/posts/entities/comment.entity';
 import { CommentsService } from 'src/posts/comments.service';
+import { LikeComment } from 'src/posts/entities/comment-like.entity';
+import { LikeStory } from 'src/posts/entities/story-like.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User, Profile, Follow, Post, Comment])],
+  imports: [
+    TypeOrmModule.forFeature([
+      User,
+      Profile,
+      Follow,
+      Post,
+      Comment,
+      LikeComment,
+      LikeStory,
+    ]),
+  ],
   controllers: [UsersController],
   providers: [UsersService, JwtStrategy, CommentsService],
   exports: [UsersService],

@@ -6,12 +6,15 @@ import { Post, StatusStory } from './entities/post.entity';
 import { Comment } from './entities/comment.entity';
 import { User } from 'src/users/entities/user.entity';
 import { paginationGen } from 'src/utils/pagination-gen';
+import { LikeComment } from './entities/comment-like.entity';
 
 @Injectable()
 export class CommentsService {
   constructor(
     @InjectRepository(Post)
     private postsRepository: Repository<Post>,
+    @InjectRepository(LikeComment)
+    private likesRepository: Repository<LikeComment>,
     @InjectRepository(Comment)
     private commentsRepository: Repository<Comment>,
   ) {}
@@ -42,7 +45,7 @@ export class CommentsService {
     return savecomment;
   }
 
-  async findAll(id: number, page: number = 1) {
+  async findAll(id: number, page: number = 1, user: User) {
     const limit = 5;
     const offset = limit * (page - 1);
     const where = {
@@ -72,6 +75,15 @@ export class CommentsService {
           },
         },
       });
+      comments[i]['likes'] = await this.likesRepository.count({
+        where: {
+          target_id: comments[i].id,
+        },
+      });
+      comments[i]['liked'] = await this.likesRepository.existsBy({
+        target_id: comments[i].id,
+        user_id: user.id,
+      });
     }
 
     return {
@@ -83,17 +95,17 @@ export class CommentsService {
   }
 
   async remove(id: number, user: User) {
-    const comment = await this.commentsRepository.findOne({
-      where: {
-        id,
-        user_id: user.id,
-      },
-    });
+    const comment = await this.findCommentByIdAndUser(id, user.id);
     await this.commentsRepository.remove(comment);
     return 'comment deleted successfully';
   }
 
-  async findOne(postId: number, commentId: number, page: number = 1) {
+  async findOne(
+    postId: number,
+    commentId: number,
+    page: number = 1,
+    user: User,
+  ) {
     page = page <= 0 ? 1 : page;
     const limit = 10;
     const skip = limit * (page - 1);
@@ -108,6 +120,17 @@ export class CommentsService {
     });
 
     if (!comment) throw new NotFoundException('comment not found');
+
+    comment['liked'] = await this.likesRepository.existsBy({
+      target_id: comment.id,
+      user_id: user.id,
+    });
+
+    comment['likes'] = await this.likesRepository.count({
+      where: {
+        target_id: comment.id,
+      },
+    });
 
     comment.replies = await this.commentsRepository.count({
       where: {
@@ -127,6 +150,27 @@ export class CommentsService {
       take: limit,
     });
 
+    for (let i = 0; i < comments.length; i++) {
+      comments[i].replies = await this.commentsRepository.count({
+        where: {
+          parent_id: comments[i].id,
+          post: {
+            status: StatusStory.Published,
+          },
+        },
+      });
+      comments[i]['likes'] = await this.likesRepository.count({
+        where: {
+          target_id: comments[i].id,
+        },
+      });
+
+      comments[i]['liked'] = await this.likesRepository.existsBy({
+        target_id: comments[i].id,
+        user_id: user.id,
+      });
+    }
+
     return {
       data: {
         parent_comment: comment,
@@ -137,10 +181,54 @@ export class CommentsService {
     };
   }
 
+  async toggleLike(id: number, user: User, postId: number) {
+    const comment = await this.findCommentById(id, postId);
+    const liked = await this.likesRepository.findOne({
+      where: {
+        target_id: comment.id,
+        user_id: user.id,
+      },
+    });
+    if (!liked) {
+      const like = await this.likesRepository.create({
+        target_id: comment.id,
+        user_id: user.id,
+      });
+      await this.likesRepository.save(like);
+      return {
+        data: {
+          message: 'comment liked successfully',
+        },
+      };
+    }
+    await this.likesRepository.remove(liked);
+    return {
+      data: {
+        message: 'comment unliked successfully',
+      },
+    };
+  }
+
+  //? helper functions
   async countCommentByPostId(post_id: number): Promise<number> {
     const count: number = await this.commentsRepository.countBy({
       postId: post_id,
     });
     return count;
+  }
+
+  async findCommentById(id: number, postId: number) {
+    const comment = await this.commentsRepository.findOneBy({ id, postId });
+    if (!comment) throw new NotFoundException('comment not found');
+    return comment;
+  }
+
+  async findCommentByIdAndUser(id: number, userId: number) {
+    const comment = await this.commentsRepository.findOneBy({
+      id,
+      user_id: userId,
+    });
+    if (!comment) throw new NotFoundException('comment not found');
+    return comment;
   }
 }
