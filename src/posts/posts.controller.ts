@@ -76,13 +76,19 @@ export class PostsController {
   @Get()
   @Pagination()
   @FilterStory()
-  findAll(@Query('keyword') keyword: string, @Query('page') page: number) {
-    return this.postsService.findAll(keyword, page);
+  @UseGuards(JwtAuthGuard)
+  findAll(
+    @GetUser() user: User,
+    @Query('keyword') keyword: string,
+    @Query('page') page: number,
+  ) {
+    return this.postsService.findAll(keyword, page, user);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.postsService.findOne(+id);
+  @UseGuards(JwtAuthGuard)
+  findOne(@GetUser() user: User, @Param('id') id: string) {
+    return this.postsService.findOne(+id, user);
   }
 
   @Patch(':id')
@@ -102,6 +108,12 @@ export class PostsController {
   @Roles(Role.Admin, Role.Author)
   remove(@Param('id') id: string, @GetUser() user: User) {
     return this.postsService.remove(+id, user);
+  }
+
+  @Patch(':id/like')
+  @UseGuards(JwtAuthGuard)
+  toggleStoryLike(@GetUser() user: User, @Param('id') id: string) {
+    return this.postsService.toggleLike(+id, user);
   }
 
   @Post(':id/comments')

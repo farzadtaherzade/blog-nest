@@ -75,5 +75,5 @@ export class Post {
   @OneToMany((_type) => LikeStory, (like) => like.target, {
     onDelete: 'CASCADE',
   })
-  likes: LikeStory[];
+  likes: LikeStory[] | number;
 }

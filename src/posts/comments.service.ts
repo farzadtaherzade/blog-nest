@@ -190,7 +190,7 @@ export class CommentsService {
       },
     });
     if (!liked) {
-      const like = await this.likesRepository.create({
+      const like = this.likesRepository.create({
         target_id: comment.id,
         user_id: user.id,
       });

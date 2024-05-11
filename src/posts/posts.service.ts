@@ -12,12 +12,15 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { paginationGen } from 'src/utils/pagination-gen';
 import { CommentsService } from './comments.service';
+import { LikeStory } from './entities/story-like.entity';
 
 @Injectable()
 export class PostsService {
   constructor(
     @InjectRepository(Post)
     private postsRepository: Repository<Post>,
+    @InjectRepository(LikeStory)
+    private likesRepository: Repository<LikeStory>,
     @InjectRepository(Tag)
     private tagsRepository: Repository<Tag>,
     private commentService: CommentsService,
@@ -70,7 +73,7 @@ export class PostsService {
     return post;
   }
 
-  async findAll(keyword: string, page: number = 1) {
+  async findAll(keyword: string, page: number = 1, user: User) {
     const limit = 5;
     const skip = limit * (page - 1);
 
@@ -83,7 +86,7 @@ export class PostsService {
           status: StatusStory.Published,
         };
 
-    const [posts, count] = await this.postsRepository.findAndCount({
+    const [stories, count] = await this.postsRepository.findAndCount({
       where,
       relations: {
         tags: true,
@@ -92,21 +95,29 @@ export class PostsService {
       skip,
     });
 
-    for (let i = 0; i < posts.length; i++) {
-      posts[i]['commentsCount'] =
-        await this.commentService.countCommentByPostId(posts[i].id);
+    for (let i = 0; i < stories.length; i++) {
+      stories[i]['commentsCount'] =
+        await this.commentService.countCommentByPostId(stories[i].id);
+
+      stories[i]['likes'] = await this.likesRepository.countBy({
+        target_id: stories[i].id,
+      });
+      stories[i]['liked'] = await this.likesRepository.existsBy({
+        target_id: stories[i].id,
+        user_id: user.id,
+      });
     }
 
     return {
       data: {
-        posts,
+        stories,
       },
       paginate: paginationGen(count, limit, +page),
     };
   }
 
-  async findOne(id: number) {
-    const post = await this.postsRepository.findOne({
+  async findOne(id: number, user: User) {
+    const story = await this.postsRepository.findOne({
       where: {
         id,
         status: StatusStory.Published,
@@ -116,8 +127,15 @@ export class PostsService {
         tags: true,
       },
     });
-    if (!post) throw new NotFoundException('post not found');
-    return post;
+    story['likes'] = await this.likesRepository.countBy({
+      target_id: id,
+    });
+    story['liked'] = await this.likesRepository.existsBy({
+      target_id: id,
+      user_id: user.id,
+    });
+    if (!story) throw new NotFoundException('post not found');
+    return story;
   }
 
   async update(id: number, storyDto: UpdatePostDto, user: User) {
@@ -162,5 +180,39 @@ export class PostsService {
     }
     await this.postsRepository.remove(post, {});
     return post;
+  }
+
+  async toggleLike(id: number, user: User) {
+    const story = await this.findStoryById(id);
+    const liked = await this.likesRepository.findOne({
+      where: {
+        target_id: story.id,
+        user_id: user.id,
+      },
+    });
+    if (!liked) {
+      const like = this.likesRepository.create({
+        target_id: story.id,
+        user_id: user.id,
+      });
+      await this.likesRepository.save(like);
+      return {
+        data: {
+          message: 'story liked successfully',
+        },
+      };
+    }
+    await this.likesRepository.remove(liked);
+    return {
+      data: {
+        message: 'story unliked successfully',
+      },
+    };
+  }
+
+  async findStoryById(id: number) {
+    const story = await this.postsRepository.findOneBy({ id });
+    if (!story) throw new NotFoundException('Story Not Found');
+    return story;
   }
 }
