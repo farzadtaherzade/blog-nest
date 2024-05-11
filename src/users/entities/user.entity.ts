@@ -11,6 +11,7 @@ import {
 } from 'typeorm';
 import { Follow } from './follow.entity';
 import { Profile } from './profile.entity';
+import { LikeComment } from 'src/posts/entities/comment-like.entity';
 
 export enum Role {
   Admin = 'admin',
@@ -59,6 +60,11 @@ export class User {
 
   @OneToMany((type) => Follow, (follow) => follow.user, { onDelete: 'CASCADE' })
   following: Follow[];
+
+  @OneToMany((type) => LikeComment, (like) => like.user, {
+    onDelete: 'CASCADE',
+  })
+  commentLikes: LikeComment[];
 
   @CreateDateColumn()
   createdAt: Date;

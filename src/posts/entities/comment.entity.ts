@@ -10,6 +10,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { LikeComment } from './comment-like.entity';
 
 @Entity()
 export class Comment {
@@ -56,4 +57,9 @@ export class Comment {
   @ManyToOne((_type) => Post, (post) => post.comments, { nullable: false })
   @JoinColumn({ name: 'post_id' })
   post: Post;
+
+  @OneToMany((_type) => LikeComment, (like) => like.target, {
+    onDelete: 'CASCADE',
+  })
+  likes: LikeComment[];
 }
