@@ -78,10 +78,16 @@ export class PostsService {
     const skip = limit * (page - 1);
 
     const where = keyword
-      ? {
-          title: Like(`%${keyword}%`),
-          status: StatusStory.Published,
-        }
+      ? [
+          {
+            title: Like(`%${keyword}%`),
+            status: StatusStory.Published,
+          },
+          {
+            title: Like(`%${keyword}%`),
+            status: StatusStory.ForSale,
+          },
+        ]
       : {
           status: StatusStory.Published,
         };

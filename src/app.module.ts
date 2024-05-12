@@ -10,6 +10,8 @@ import { PostsModule } from './posts/posts.module';
 import { TagsModule } from './tags/tags.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
+import { PaymentModule } from './payment/payment.module';
+import { BasketModule } from './basket/basket.module';
 
 @Module({
   imports: [
@@ -36,6 +38,8 @@ import { join } from 'path';
     UsersModule,
     PostsModule,
     TagsModule,
+    PaymentModule,
+    BasketModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Comment } from 'src/posts/entities/comment.entity';
 import { Post } from 'src/posts/entities/post.entity';
 import {
@@ -13,6 +14,7 @@ import { Follow } from './follow.entity';
 import { Profile } from './profile.entity';
 import { LikeComment } from 'src/posts/entities/comment-like.entity';
 import { LikeStory } from 'src/posts/entities/story-like.entity';
+import { Basket } from 'src/basket/entities/basket.entity';
 
 export enum Role {
   Admin = 'admin',
@@ -47,6 +49,11 @@ export class User {
     onDelete: 'CASCADE',
   })
   profile: Profile;
+
+  @OneToOne((type) => Basket, (basket) => basket.user, {
+    onDelete: 'CASCADE',
+  })
+  basket: Basket;
 
   @OneToMany((type) => Post, (post) => post.author, {
     nullable: true,

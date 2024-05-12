@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Comment } from 'src/posts/entities/comment.entity';
 import { Tag } from 'src/tags/entities/tag.entity';
 import { User } from 'src/users/entities/user.entity';
@@ -14,10 +15,12 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { LikeStory } from './story-like.entity';
+import { BasketItem } from 'src/basket/entities/basketItem.entity';
 
 export enum StatusStory {
   Draft = 'draft',
   Published = 'published',
+  ForSale = 'for_sale',
 }
 
 @Entity()
@@ -76,4 +79,9 @@ export class Post {
     onDelete: 'CASCADE',
   })
   likes: LikeStory[] | number;
+
+  @OneToMany((_type) => BasketItem, (item) => item.article, {
+    onDelete: 'CASCADE',
+  })
+  basketItem: BasketItem[] | number;
 }
