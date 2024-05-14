@@ -11,6 +11,7 @@ import { BasketItem } from './entities/basketItem.entity';
 import { Repository } from 'typeorm';
 import { Post, StatusStory } from 'src/posts/entities/post.entity';
 import { paginationGen } from 'src/utils/pagination-gen';
+import { CopyPost } from 'src/posts/entities/copy-post.entity';
 
 @Injectable()
 export class BasketService {
@@ -21,9 +22,18 @@ export class BasketService {
     private basketItemsRepository: Repository<BasketItem>,
     @InjectRepository(Post)
     private postsRepository: Repository<Post>,
+    @InjectRepository(CopyPost)
+    private copyPostRepository: Repository<CopyPost>,
   ) {}
 
   async addToBasket(addItemDto: AddItemDto, user: User) {
+    const productPruchesd = await this.copyPostRepository.existsBy({
+      article_id: addItemDto.article_id,
+      buyer_id: user.id,
+    });
+    if (productPruchesd)
+      throw new BadRequestException('you already buyed this article');
+
     let basket = await this.basketRepository.findOne({
       where: {
         user_id: user.id,
@@ -36,6 +46,13 @@ export class BasketService {
         user_id: user.id,
       });
       await this.basketRepository.save(basket);
+    } else {
+      const productExistInBasket = await this.basketItemsRepository.existsBy({
+        article_id: addItemDto.article_id,
+        basket_id: basket.id,
+      });
+      if (productExistInBasket)
+        throw new BadRequestException('article are already in you basket');
     }
 
     const articleRequested = await this.postsRepository.findOneBy({
