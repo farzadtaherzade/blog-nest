@@ -1,30 +1,35 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Delete,
+  UseGuards,
+  Query,
+} from '@nestjs/common';
 import { BasketService } from './basket.service';
-import { CreateBasketDto } from './dto/create-basket.dto';
-import { UpdateBasketDto } from './dto/update-basket.dto';
+import { JwtAuthGuard } from 'src/jwt-auth/jwt-auth.guard';
+import { AddItemDto } from './dto/add-item.dto';
+import { GetUser } from 'src/decorators/user.decorator';
+import { User } from 'src/users/entities/user.entity';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 @Controller('basket')
+@ApiBearerAuth()
+@ApiTags('Basket')
+@UseGuards(JwtAuthGuard)
 export class BasketController {
   constructor(private readonly basketService: BasketService) {}
 
-  @Post()
-  create(@Body() createBasketDto: CreateBasketDto) {
-    return this.basketService.create(createBasketDto);
+  @Post('/add')
+  addToBasket(@Body() addItemDto: AddItemDto, @GetUser() user: User) {
+    return this.basketService.addToBasket(addItemDto, user);
   }
 
   @Get()
-  findAll() {
-    return this.basketService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.basketService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateBasketDto: UpdateBasketDto) {
-    return this.basketService.update(+id, updateBasketDto);
+  findOne(@GetUser() user: User, @Query('page') page: number) {
+    return this.basketService.findOne(user, page);
   }
 
   @Delete(':id')

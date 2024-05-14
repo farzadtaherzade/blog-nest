@@ -24,8 +24,8 @@ import { UpdateProfileDto } from './dto/update-user.dto';
 import { Pagination } from 'src/decorators/pagination.decorator';
 import { ChangeUsernameDto } from './dto/user.dto';
 
-@ApiBearerAuth()
 @Controller('users')
+@ApiBearerAuth()
 @ApiTags('Users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}

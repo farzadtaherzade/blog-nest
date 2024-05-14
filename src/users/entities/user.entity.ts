@@ -15,6 +15,7 @@ import { Profile } from './profile.entity';
 import { LikeComment } from 'src/posts/entities/comment-like.entity';
 import { LikeStory } from 'src/posts/entities/story-like.entity';
 import { Basket } from 'src/basket/entities/basket.entity';
+import { Payment } from 'src/payment/entities/payment.entity';
 
 export enum Role {
   Admin = 'admin',
@@ -50,10 +51,11 @@ export class User {
   })
   profile: Profile;
 
-  @OneToOne((type) => Basket, (basket) => basket.user, {
+  @OneToMany((type) => Basket, (basket) => basket.user, {
     onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
   })
-  basket: Basket;
+  basket: Basket[];
 
   @OneToMany((type) => Post, (post) => post.author, {
     nullable: true,
@@ -84,4 +86,9 @@ export class User {
     onDelete: 'CASCADE',
   })
   story_likes: LikeStory[];
+
+  @OneToMany((type) => Payment, (payment) => payment.user, {
+    onDelete: 'CASCADE',
+  })
+  payments: Payment[];
 }

@@ -2,7 +2,7 @@
 import {
   Column,
   Entity,
-  JoinTable,
+  JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
@@ -21,10 +21,10 @@ export class BasketItem {
   basket_id: number;
 
   @ManyToOne((_type) => Basket, (basket) => basket.articles)
-  @JoinTable({ name: 'user_id' })
+  @JoinColumn({ name: 'user_id' })
   basket: Basket;
 
   @ManyToOne((_type) => Post, (article) => article.basketItem)
-  @JoinTable({ name: 'article_id' })
+  @JoinColumn({ name: 'article_id' })
   article: Post;
 }

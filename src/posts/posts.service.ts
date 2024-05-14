@@ -124,23 +124,29 @@ export class PostsService {
 
   async findOne(id: number, user: User) {
     const story = await this.postsRepository.findOne({
-      where: {
-        id,
-        status: StatusStory.Published,
-      },
+      where: [
+        {
+          id,
+          status: StatusStory.Published,
+        },
+        {
+          id,
+          status: StatusStory.ForSale,
+        },
+      ],
       relations: {
         author: true,
         tags: true,
       },
     });
-    story['likes'] = await this.likesRepository.countBy({
+    if (!story) throw new NotFoundException('post not found');
+    story['likesCount'] = await this.likesRepository.countBy({
       target_id: id,
     });
     story['liked'] = await this.likesRepository.existsBy({
       target_id: id,
       user_id: user.id,
     });
-    if (!story) throw new NotFoundException('post not found');
     return story;
   }
 

@@ -52,6 +52,9 @@ export class Post {
   @Column({ default: StatusStory.Draft, nullable: true })
   status: StatusStory;
 
+  @Column({ nullable: true, default: 120000 })
+  price: number;
+
   @Column({ name: 'author_id' })
   authorId: number;
 
