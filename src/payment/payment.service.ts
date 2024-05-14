@@ -18,6 +18,7 @@ import { Payment } from './entities/payment.entity';
 import axios from 'axios';
 import { factorNumberGenerator } from 'src/utils/functions';
 import fetch from 'node-fetch';
+import { CopyPost } from 'src/posts/entities/copy-post.entity';
 
 @Injectable()
 export class PaymentService {
@@ -28,6 +29,8 @@ export class PaymentService {
     private itemsRepository: Repository<BasketItem>,
     @InjectRepository(Payment)
     private paymentRepository: Repository<Payment>,
+    @InjectRepository(CopyPost)
+    private copyPostRepository: Repository<CopyPost>,
   ) {}
   async payment(user: User) {
     const url = 'https://pay.ir/pg/send ';
@@ -126,8 +129,19 @@ export class PaymentService {
       payment.message = verifyResult.message;
       payment.verify = true;
       basket.is_pay = true;
-      this.paymentRepository.save(payment);
-      this.basketRepository.save(basket);
+      await this.paymentRepository.save(payment);
+      await this.basketRepository.save(basket);
+      const items = await this.itemsRepository.findBy({
+        basket_id: basket.id,
+      });
+      for (const item of items) {
+        const copyPost = this.copyPostRepository.create({
+          article_id: item.article_id,
+          buyer_id: basket.user_id,
+        });
+        await this.copyPostRepository.save(copyPost);
+      }
+
       return {
         data: {
           message: 'your payment successfully pay',

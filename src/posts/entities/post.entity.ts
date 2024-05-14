@@ -16,6 +16,7 @@ import {
 } from 'typeorm';
 import { LikeStory } from './story-like.entity';
 import { BasketItem } from 'src/basket/entities/basketItem.entity';
+import { CopyPost } from './copy-post.entity';
 
 export enum StatusStory {
   Draft = 'draft',
@@ -86,5 +87,9 @@ export class Post {
   @OneToMany((_type) => BasketItem, (item) => item.article, {
     onDelete: 'CASCADE',
   })
-  basketItem: BasketItem[] | number;
+  basketItem: BasketItem[];
+  @OneToMany((_type) => CopyPost, (copy_post) => copy_post.articles, {
+    onDelete: 'CASCADE',
+  })
+  copied: CopyPost[];
 }

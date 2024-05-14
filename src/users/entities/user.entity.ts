@@ -16,6 +16,7 @@ import { LikeComment } from 'src/posts/entities/comment-like.entity';
 import { LikeStory } from 'src/posts/entities/story-like.entity';
 import { Basket } from 'src/basket/entities/basket.entity';
 import { Payment } from 'src/payment/entities/payment.entity';
+import { CopyPost } from 'src/posts/entities/copy-post.entity';
 
 export enum Role {
   Admin = 'admin',
@@ -91,4 +92,8 @@ export class User {
     onDelete: 'CASCADE',
   })
   payments: Payment[];
+  @OneToMany((type) => CopyPost, (copy_post) => copy_post.buyer, {
+    onDelete: 'CASCADE',
+  })
+  articles_buy: CopyPost[];
 }
