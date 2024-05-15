@@ -13,6 +13,7 @@ import * as path from 'path';
 import { paginationGen } from 'src/utils/pagination-gen';
 import { CommentsService } from './comments.service';
 import { LikeStory } from './entities/story-like.entity';
+import { CopyPost } from './entities/copy-post.entity';
 
 @Injectable()
 export class PostsService {
@@ -23,6 +24,8 @@ export class PostsService {
     private likesRepository: Repository<LikeStory>,
     @InjectRepository(Tag)
     private tagsRepository: Repository<Tag>,
+    @InjectRepository(CopyPost)
+    private copyPostRepository: Repository<CopyPost>,
     private commentService: CommentsService,
   ) {}
   async create(StoryDto: CreatePostDto, user: User) {
@@ -88,9 +91,14 @@ export class PostsService {
             status: StatusStory.ForSale,
           },
         ]
-      : {
-          status: StatusStory.Published,
-        };
+      : [
+          {
+            status: StatusStory.Published,
+          },
+          {
+            status: StatusStory.ForSale,
+          },
+        ];
 
     const [stories, count] = await this.postsRepository.findAndCount({
       where,
@@ -99,11 +107,20 @@ export class PostsService {
       },
       take: limit,
       skip,
+      order: {
+        createdAt: 'ASC',
+      },
     });
 
     for (let i = 0; i < stories.length; i++) {
       stories[i]['commentsCount'] =
         await this.commentService.countCommentByPostId(stories[i].id);
+      if (stories[i].status == StatusStory.ForSale) {
+        stories[i]['belongtoUser'] = await this.copyPostRepository.existsBy({
+          article_id: stories[i].id,
+          buyer_id: user.id,
+        });
+      }
 
       stories[i]['likes'] = await this.likesRepository.countBy({
         target_id: stories[i].id,
@@ -132,6 +149,9 @@ export class PostsService {
         {
           id,
           status: StatusStory.ForSale,
+          copied: {
+            buyer_id: user.id,
+          },
         },
       ],
       relations: {

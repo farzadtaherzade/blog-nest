@@ -9,6 +9,7 @@ import { CommentsService } from './comments.service';
 import { LikeComment } from './entities/comment-like.entity';
 import { LikeStory } from './entities/story-like.entity';
 import { Follow } from 'src/users/entities/follow.entity';
+import { CopyPost } from './entities/copy-post.entity';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { Follow } from 'src/users/entities/follow.entity';
       LikeComment,
       LikeStory,
       Follow,
+      CopyPost,
     ]),
   ],
   controllers: [PostsController],
