@@ -36,6 +36,12 @@ export class UsersController {
     return this.usersService.getMe(user);
   }
 
+  @Get('my-bougts')
+  @UseGuards(JwtAuthGuard)
+  getMyBought(@GetUser() user: User, @Query('page') page: number) {
+    return this.usersService.getMyBought(user, +page);
+  }
+
   @Get(':username')
   @UseGuards(JwtAuthGuard)
   getUser(@GetUser() user: User, @Param('username') username: string) {

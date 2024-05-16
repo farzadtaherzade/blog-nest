@@ -16,6 +16,7 @@ import { UpdateProfileDto } from './dto/update-user.dto';
 import { paginationGen } from 'src/utils/pagination-gen';
 import { Post, StatusStory } from 'src/posts/entities/post.entity';
 import { CommentsService } from 'src/posts/comments.service';
+import { CopyPost } from 'src/posts/entities/copy-post.entity';
 
 @Injectable()
 export class UsersService {
@@ -26,6 +27,8 @@ export class UsersService {
     private followRepository: Repository<Follow>,
     @InjectRepository(Profile)
     private profileRepository: Repository<Profile>,
+    @InjectRepository(CopyPost)
+    private copyPostRepository: Repository<CopyPost>,
     @InjectRepository(Post)
     private storyRepository: Repository<Post>,
     private readonly commentService: CommentsService,
@@ -162,6 +165,28 @@ export class UsersService {
     return await this.usersRepository.existsBy({
       username,
     });
+  }
+
+  async getMyBought(user: User, page: number) {
+    const limit = 15;
+    const skip = limit * (page - 1);
+    const [boughts, count] = await this.copyPostRepository.findAndCount({
+      where: {
+        buyer_id: user.id,
+      },
+      relations: {
+        articles: true,
+        buyer: true,
+      },
+      skip,
+      take: limit,
+    });
+    return {
+      data: {
+        boughts,
+      },
+      pagination: paginationGen(count, limit, +page),
+    };
   }
 
   async changeUsername(user: User, usernameDto: ChangeUsernameDto) {
